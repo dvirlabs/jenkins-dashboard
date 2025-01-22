@@ -4,7 +4,7 @@ const JenkinsTable = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchData = () => {
     // Fetch data from your FastAPI endpoint
     fetch("http://localhost:8000/get_last_build_results_in_folder/My-Apps")
       .then((response) => response.json())
@@ -16,6 +16,13 @@ const JenkinsTable = () => {
         console.error("Error fetching data:", error);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchData(); // Initial fetch
+    const interval = setInterval(fetchData, 10000); // Auto-refresh every 30 seconds
+
+    return () => clearInterval(interval); // Cleanup the interval on component unmount
   }, []);
 
   if (loading) {

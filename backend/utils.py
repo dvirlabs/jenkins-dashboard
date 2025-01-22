@@ -2,17 +2,16 @@ import requests
 from datetime import datetime
 
 jenkins_url = 'http://localhost:8080'
-api_token = '11ef0fb45fb270116c808d45a4f6c5b7c0'
-# api_token = '11ecccd366fbe0b1d12b9ab0eecacb994b'
+api_token = '11f3ed19cdcf5ca7bef8ccd59a8df92172'
 
 def get_jenkins_last_build(job_name):
     url = f'{jenkins_url}/job/{job_name}/lastBuild/api/json'
-    response = requests.get(url, auth=('dvirlabs', api_token))
+    response = requests.get(url, auth=('dvir', api_token))
     return response.json()
 
 def get_jenkins_last_build_result(job_name):
     url = f'{jenkins_url}/job/{job_name}/lastBuild/api/json'
-    response = requests.get(url, auth=('dvirlabs', api_token))
+    response = requests.get(url, auth=('dvir', api_token))
     
     if response.status_code == 404:
         return {"result": "NOT_BUILT", "timestamp": None}  # Default status with no timestamp
@@ -32,7 +31,7 @@ def get_jenkins_last_build_result(job_name):
 def get_last_build_results_in_folder(folder_name):
     # Get all jobs in the folder
     folder_url = f'{jenkins_url}/job/{folder_name}/api/json'
-    folder_response = requests.get(folder_url, auth=('dvirlabs', api_token))
+    folder_response = requests.get(folder_url, auth=('dvir', api_token))
     
     if folder_response.status_code != 200:
         return {"error": f"Failed to fetch folder {folder_name}, status code {folder_response.status_code}"}

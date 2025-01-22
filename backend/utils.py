@@ -1,8 +1,9 @@
 import requests
 from datetime import datetime
 
-jenkins_url = 'http://192.168.10.105:8080'
-api_token = '11ecccd366fbe0b1d12b9ab0eecacb994b'
+jenkins_url = 'http://localhost:8080'
+api_token = '11ef0fb45fb270116c808d45a4f6c5b7c0'
+# api_token = '11ecccd366fbe0b1d12b9ab0eecacb994b'
 
 def get_jenkins_last_build(job_name):
     url = f'{jenkins_url}/job/{job_name}/lastBuild/api/json'

@@ -30,10 +30,11 @@ const JenkinsTable = () => {
           <tr>
             <th style={{ border: "1px solid black", padding: "8px" }}>Service Name</th>
             <th style={{ border: "1px solid black", padding: "8px" }}>Result</th>
+            <th style={{ border: "1px solid black", padding: "8px" }}>Last Build Time</th>
           </tr>
         </thead>
         <tbody>
-          {data.map(([serviceName, result], index) => (
+          {data.map(([serviceName, { result, timestamp }], index) => (
             <tr key={index}>
               <td style={{ border: "1px solid black", padding: "8px" }}>{serviceName}</td>
               <td
@@ -51,10 +52,15 @@ const JenkinsTable = () => {
                       ? "blue"
                       : result === "NOT_BUILT"
                       ? "orange"
+                      : result === "ERROR"
+                      ? "purple"
                       : "black", // Default color for unknown results
                 }}
               >
                 {result || "N/A"}
+              </td>
+              <td style={{ border: "1px solid black", padding: "8px" }}>
+                {timestamp || "N/A"}
               </td>
             </tr>
           ))}

@@ -18,14 +18,6 @@ app.add_middleware(
 def read_root():
     return {"Hello": "World"}
 
-@app.get("/get_jenkins_jobs")
-def get_all_jobs():
-    return get_jenkins_jobs()
-
-@app.get("/get_jenkins_job/{job_name}")
-def get_job(job_name: str):
-    return get_jenkins_job(job_name)
-
 @app.get("/get_jenkins_last_build/{job_name}")
 def get_last_build(job_name: str):
     return get_jenkins_last_build(job_name)

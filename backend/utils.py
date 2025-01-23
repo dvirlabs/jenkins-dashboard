@@ -14,19 +14,21 @@ def get_jenkins_last_build_result(job_name):
     response = requests.get(url, auth=('dvir', api_token))
     
     if response.status_code == 404:
-        return {"result": "NOT_BUILT", "timestamp": None}  # Default status with no timestamp
+        return {"result": "NOT_BUILT", "timestamp": None, "build_url": None}
     elif response.status_code == 200:
         job_data = response.json()
         result = job_data.get('result', 'UNKNOWN')
         timestamp = job_data.get('timestamp', None)
+        build_url = job_data.get('url')  # Get the URL for the last build
         
         if timestamp:
             # Convert the timestamp from milliseconds to a human-readable format
             timestamp = datetime.utcfromtimestamp(timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S')
         
-        return {"result": result, "timestamp": timestamp}
+        return {"result": result, "timestamp": timestamp, "build_url": build_url}
     else:
-        return {"result": "ERROR", "timestamp": None}  # If there was some other error
+        return {"result": "ERROR", "timestamp": None, "build_url": None}
+
 
 def get_last_build_results_in_folder(folder_name):
     # Get all jobs in the folder

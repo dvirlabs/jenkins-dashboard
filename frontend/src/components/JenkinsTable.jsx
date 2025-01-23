@@ -20,7 +20,7 @@ const JenkinsTable = () => {
 
   useEffect(() => {
     fetchData(); // Initial fetch
-    const interval = setInterval(fetchData, 10000); // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchData, 10000); // Auto-refresh every 10 seconds
 
     return () => clearInterval(interval); // Cleanup the interval on component unmount
   }, []);
@@ -38,10 +38,11 @@ const JenkinsTable = () => {
             <th style={{ border: "1px solid black", padding: "8px" }}>Service Name</th>
             <th style={{ border: "1px solid black", padding: "8px" }}>Result</th>
             <th style={{ border: "1px solid black", padding: "8px" }}>Last Build Time</th>
+            <th style={{ border: "1px solid black", padding: "8px" }}>Link To Build</th>
           </tr>
         </thead>
         <tbody>
-          {data.map(([serviceName, { result, timestamp }], index) => (
+          {data.map(([serviceName, { result, timestamp, build_url }], index) => (
             <tr key={index}>
               <td style={{ border: "1px solid black", padding: "8px" }}>{serviceName}</td>
               <td
@@ -68,6 +69,20 @@ const JenkinsTable = () => {
               </td>
               <td style={{ border: "1px solid black", padding: "8px" }}>
                 {timestamp || "N/A"}
+              </td>
+              <td style={{ border: "1px solid black", padding: "8px" }}>
+                {build_url ? (
+                  <a
+                    href={build_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: "none", color: "rgb(163, 148, 217)" }}
+                  >
+                    View Build
+                  </a>
+                ) : (
+                  "N/A"
+                )}
               </td>
             </tr>
           ))}

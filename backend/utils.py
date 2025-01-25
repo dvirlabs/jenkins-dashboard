@@ -1,8 +1,14 @@
 import requests
 from datetime import datetime
+from dotenv import load_dotenv
+import os
 
-jenkins_url = 'http://localhost:8080'
-api_token = '11f3ed19cdcf5ca7bef8ccd59a8df92172'
+load_dotenv()
+
+
+
+jenkins_url = os.getenv("JENKINS_URL")
+api_token = os.getenv("API_KEY")
 
 def get_jenkins_last_build(job_name):
     url = f'{jenkins_url}/job/{job_name}/lastBuild/api/json'

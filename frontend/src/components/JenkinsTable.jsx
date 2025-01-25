@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 
+const apiUrl = process.env.REACT_APP_API_URL
+const buildsPath = process.env.REACT_APP_BUILDS_PATH
+const teamName = process.env.REACT_APP_TEAM_NAME
+
 const JenkinsTable = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = () => {
     // Fetch data from your FastAPI endpoint
-    fetch("http://localhost:8000/get_last_build_results_in_folder/My-Apps")
+    fetch(`${apiUrl}/get_last_build_results_in_folder/${buildsPath}`)
       .then((response) => response.json())
       .then((data) => {
         setData(Object.entries(data)); // Convert object to array of [key, value]
@@ -31,7 +35,7 @@ const JenkinsTable = () => {
 
   return (
     <div>
-      <h2>Jenkins Job Results</h2>
+      <h2>Jenkins Job Results of: {teamName}</h2>
       <table style={{ borderCollapse: "collapse", width: "100%" }}>
         <thead>
           <tr>

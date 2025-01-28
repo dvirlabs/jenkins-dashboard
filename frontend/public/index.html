@@ -28,6 +28,14 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    <!-- Include the env.js script -->
+    <script src="env.js"></script>
+    <script>
+      // Fallback in case a variable is missing
+      window.REACT_APP_API_URL = window.env.REACT_APP_API_URL || "http://default-url:8080";
+      window.REACT_APP_BUILDS_PATH = window.env.REACT_APP_BUILDS_PATH || "/default-builds";
+      window.REACT_APP_TEAM_NAME = window.env.REACT_APP_TEAM_NAME || "Default Team";
+    </script>
     <div id="root"></div>
     <!--
       This HTML file is a template.

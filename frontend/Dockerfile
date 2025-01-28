@@ -19,6 +19,8 @@ FROM nginx:1.26.2
 
 # Copy the built frontend app into the nginx container
 COPY --from=build /app/build /usr/share/nginx/html
+RUN chmod -R 777 /usr/share/nginx/
+
 
 # Expose port 3000 (for development purposes)
 EXPOSE 3000

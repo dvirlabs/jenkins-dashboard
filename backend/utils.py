@@ -8,16 +8,17 @@ load_dotenv()
 
 
 jenkins_url = os.getenv("JENKINS_URL")
+jenkins_username = os.getenv("JENKINS_USERNAME")
 api_token = os.getenv("API_KEY")
 
 def get_jenkins_last_build(job_name):
     url = f'{jenkins_url}/job/{job_name}/lastBuild/api/json'
-    response = requests.get(url, auth=('dvir', api_token))
+    response = requests.get(url, auth=(jenkins_username, api_token))
     return response.json()
 
 def get_jenkins_last_build_result(job_name):
     url = f'{jenkins_url}/job/{job_name}/lastBuild/api/json'
-    response = requests.get(url, auth=('dvir', api_token))
+    response = requests.get(url, auth=(jenkins_username, api_token))
     
     if response.status_code == 404:
         return {"result": "NOT_BUILT", "timestamp": None, "build_url": None}
@@ -39,7 +40,7 @@ def get_jenkins_last_build_result(job_name):
 def get_last_build_results_in_folder(folder_name):
     # Get all jobs in the folder
     folder_url = f'{jenkins_url}/job/{folder_name}/api/json'
-    folder_response = requests.get(folder_url, auth=('dvir', api_token))
+    folder_response = requests.get(folder_url, auth=(jenkins_username, api_token))
     
     if folder_response.status_code != 200:
         return {"error": f"Failed to fetch folder {folder_name}, status code {folder_response.status_code}"}

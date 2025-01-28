@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 
-const apiUrl = process.env.REACT_APP_API_URL
-const buildsPath = process.env.REACT_APP_BUILDS_PATH
-const teamName = process.env.REACT_APP_TEAM_NAME
+const apiUrl = window.REACT_APP_API_URL;
+const buildsPath = window.REACT_APP_BUILDS_PATH;
+const teamName = window.REACT_APP_TEAM_NAME;
+console.log(apiUrl, buildsPath, teamName);
+
 
 const JenkinsTable = () => {
   const [data, setData] = useState([]);

@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
 
-const apiUrl = window.REACT_APP_API_URL;
-const buildsPath = window.REACT_APP_BUILDS_PATH;
-const teamName = window.REACT_APP_TEAM_NAME;
-console.log(apiUrl, buildsPath, teamName);
-
+const apiUrl = process.env.REACT_APP_API_URL;
+const buildsPath = process.env.REACT_APP_BUILDS_PATH;
+const teamName = process.env.REACT_APP_TEAM_NAME;
 
 const JenkinsTable = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedResult, setSelectedResult] = useState("ALL");
+  const [priorityResult, setPriorityResult] = useState("NONE");
 
   const fetchData = () => {
-    // Fetch data from your FastAPI endpoint
     fetch(`${apiUrl}/get_last_build_results_in_folder/${buildsPath}`)
       .then((response) => response.json())
       .then((data) => {
-        setData(Object.entries(data)); // Convert object to array of [key, value]
+        const dataArray = Object.entries(data);
+        setData(sortData(dataArray, selectedResult, priorityResult));
         setLoading(false);
       })
       .catch((error) => {
@@ -24,12 +24,23 @@ const JenkinsTable = () => {
       });
   };
 
-  useEffect(() => {
-    fetchData(); // Initial fetch
-    const interval = setInterval(fetchData, 10000); // Auto-refresh every 10 seconds
+  const sortData = (dataArray, filterResult, priority) => {
+    let filteredData = filterResult === "ALL" ? dataArray : dataArray.filter(([_, value]) => value.result === filterResult);
 
-    return () => clearInterval(interval); // Cleanup the interval on component unmount
-  }, []);
+    return filteredData.sort((a, b) => {
+      if (priority !== "NONE") {
+        if (a[1].result === priority && b[1].result !== priority) return -1;
+        if (b[1].result === priority && a[1].result !== priority) return 1;
+      }
+      return 0;
+    });
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
+  }, [selectedResult, priorityResult]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -38,6 +49,56 @@ const JenkinsTable = () => {
   return (
     <div>
       <h2>Jenkins Job Results of: {teamName}</h2>
+
+      {/* עיצוב שיפור רק עבור הפילטרים */}
+      <div style={{ display: "flex", gap: "15px", marginBottom: "10px", alignItems: "center" }}>
+        <div>
+          <label htmlFor="filter" style={{ fontWeight: "bold", marginRight: "5px" }}>Filter by Result:</label>
+          <select
+            id="filter"
+            value={selectedResult}
+            onChange={(e) => setSelectedResult(e.target.value)}
+            style={{
+              padding: "6px",
+              borderRadius: "5px",
+              border: "1px solid #aaa",
+              backgroundColor: "#f8f8f8",
+              cursor: "pointer"
+            }}
+          >
+            <option value="ALL">All</option>
+            <option value="FAILURE">Failure</option>
+            <option value="SUCCESS">Success</option>
+            <option value="UNSTABLE">Unstable</option>
+            <option value="ABORTED">Aborted</option>
+            <option value="NOT_BUILT">Not Built</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="priority" style={{ fontWeight: "bold", marginRight: "5px" }}>Priority Result:</label>
+          <select
+            id="priority"
+            value={priorityResult}
+            onChange={(e) => setPriorityResult(e.target.value)}
+            style={{
+              padding: "6px",
+              borderRadius: "5px",
+              border: "1px solid #aaa",
+              backgroundColor: "#f8f8f8",
+              cursor: "pointer"
+            }}
+          >
+            <option value="NONE">None</option>
+            <option value="FAILURE">Failure</option>
+            <option value="SUCCESS">Success</option>
+            <option value="UNSTABLE">Unstable</option>
+            <option value="ABORTED">Aborted</option>
+            <option value="NOT_BUILT">Not Built</option>
+          </select>
+        </div>
+      </div>
+
       <table style={{ borderCollapse: "collapse", width: "100%" }}>
         <thead>
           <tr>
@@ -66,9 +127,7 @@ const JenkinsTable = () => {
                       ? "blue"
                       : result === "NOT_BUILT"
                       ? "orange"
-                      : result === "ERROR"
-                      ? "purple"
-                      : "black", // Default color for unknown results
+                      : "black",
                 }}
               >
                 {result || "N/A"}

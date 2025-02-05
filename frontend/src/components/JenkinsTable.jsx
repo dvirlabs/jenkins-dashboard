@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { RefreshCcw } from "lucide-react"; // אייקון מקצועי
-import "../style/jenkinsTable.css";
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const buildsPath = process.env.REACT_APP_BUILDS_PATH;
@@ -10,6 +8,8 @@ const JenkinsTable = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [buildingJobs, setBuildingJobs] = useState(new Set());
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedResult, setSelectedResult] = useState(""); // ברירת מחדל: הצג הכל
 
   const fetchData = () => {
     fetch(`${apiUrl}/get_last_build_results_in_folder/${buildsPath}`)
@@ -23,6 +23,12 @@ const JenkinsTable = () => {
         setLoading(false);
       });
   };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const triggerBuild = (jobName) => {
     setBuildingJobs((prev) => new Set(prev).add(jobName));
@@ -40,7 +46,6 @@ const JenkinsTable = () => {
             fetchData();
           }, 10000);
         } else {
-          console.error("Failed to trigger job:", data.message);
           alert(`Error triggering job ${jobName}: ${data.message}`);
           setBuildingJobs((prev) => {
             const updatedJobs = new Set(prev);
@@ -49,8 +54,7 @@ const JenkinsTable = () => {
           });
         }
       })
-      .catch((error) => {
-        console.error("Error triggering build:", error);
+      .catch(() => {
         alert(`Error triggering build for ${jobName}`);
         setBuildingJobs((prev) => {
           const updatedJobs = new Set(prev);
@@ -61,77 +65,116 @@ const JenkinsTable = () => {
   };
 
   const triggerAllBuilds = () => {
-    data.forEach(([serviceName]) => triggerBuild(serviceName));
+    if (window.confirm("Are you sure you want to run all builds?")) {
+      data.forEach(([serviceName]) => triggerBuild(serviceName));
+    }
   };
 
   const triggerFailedBuilds = () => {
-    data.forEach(([serviceName, { result }]) => {
-      if (result !== "SUCCESS") {
-        triggerBuild(serviceName);
-      }
-    });
+    if (window.confirm("Are you sure you want to run only the failed builds?")) {
+      data.forEach(([serviceName, { result }]) => {
+        if (result !== "SUCCESS") {
+          triggerBuild(serviceName);
+        }
+      });
+    }
   };
 
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
-  }, []);
+  // 🔍 סינון השירותים לפי שם ותוצאה
+  const filteredData = data.filter(([serviceName, { result }]) =>
+    serviceName.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (selectedResult === "" || result === selectedResult)
+  );
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="table-container">
+    <div>
       <h2>Jenkins Job Results of: {teamName}</h2>
-      <table>
+
+      {/* 🔍 חיפוש + Dropdown לסינון */}
+      <div style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}>
+        <input
+          type="text"
+          placeholder="🔍 Search services..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            padding: "8px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            marginRight: "10px",
+          }}
+        />
+
+        <select
+          value={selectedResult}
+          onChange={(e) => setSelectedResult(e.target.value)}
+          style={{
+            padding: "8px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+          }}
+        >
+          <option value="">All Results</option>
+          <option value="SUCCESS">✅ SUCCESS</option>
+          <option value="FAILURE">❌ FAILURE</option>
+          <option value="ABORTED">⚪ ABORTED</option>
+          <option value="UNSTABLE">🔵 UNSTABLE</option>
+          <option value="NOT_BUILT">🟠 NOT BUILT</option>
+        </select>
+      </div>
+
+      <table style={{ borderCollapse: "collapse", width: "100%" }}>
         <thead>
           <tr>
-            <th>Service Name</th>
-            <th>Result</th>
-            <th>Last Build Time</th>
-            <th>Link To Build</th>
-            <th>Actions</th>
+            <th style={{ border: "1px solid black", padding: "8px" }}>Service Name</th>
+            <th style={{ border: "1px solid black", padding: "8px" }}>Result</th>
+            <th style={{ border: "1px solid black", padding: "8px" }}>Last Build Time</th>
+            <th style={{ border: "1px solid black", padding: "8px" }}>Link To Build</th>
+            <th style={{ border: "1px solid black", padding: "8px" }}>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {data.map(([serviceName, { result, timestamp, build_url }], index) => (
+          {filteredData.map(([serviceName, { result, timestamp, build_url }], index) => (
             <tr key={index}>
-              <td>
-                {serviceName}{" "}
-                {buildingJobs.has(serviceName) && <RefreshCcw className="spinner" size={20} />}
+              <td style={{ border: "1px solid black", padding: "8px" }}>
+                {serviceName} {buildingJobs.has(serviceName) && "🔄"}
               </td>
-              <td
-                className={
-                  result === "SUCCESS"
-                    ? "status-success"
-                    : result === "FAILURE"
-                    ? "status-failure"
-                    : result === "ABORTED"
-                    ? "status-aborted"
-                    : result === "UNSTABLE"
-                    ? "status-unstable"
-                    : result === "NOT_BUILT"
-                    ? "status-not-built"
-                    : ""
-                }
-              >
+              <td style={{
+                border: "1px solid black",
+                padding: "8px",
+                color:
+                  result === "SUCCESS" ? "green" :
+                  result === "FAILURE" ? "red" :
+                  result === "ABORTED" ? "gray" :
+                  result === "UNSTABLE" ? "blue" :
+                  result === "NOT_BUILT" ? "orange" : "black",
+              }}>
                 {result || "N/A"}
               </td>
-              <td>{timestamp || "N/A"}</td>
-              <td>
+              <td style={{ border: "1px solid black", padding: "8px" }}>{timestamp || "N/A"}</td>
+              <td style={{ border: "1px solid black", padding: "8px" }}>
                 {build_url ? (
-                  <a href={build_url} target="_blank" rel="noopener noreferrer">
+                  <a href={build_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "rgb(163, 148, 217)" }}>
                     View Build
                   </a>
-                ) : (
-                  "N/A"
-                )}
+                ) : "N/A"}
               </td>
-              <td style={{ textAlign: "center" }}>
-                <button onClick={() => triggerBuild(serviceName)} className="run-btn">
-                  {buildingJobs.has(serviceName) ? <RefreshCcw className="spinner" size={20} /> : <RefreshCcw size={20} />}
+              <td style={{ border: "1px solid black", padding: "8px", textAlign: "center" }}>
+                <button 
+                  onClick={() => triggerBuild(serviceName)} 
+                  style={{
+                    backgroundColor: "rgb(98, 158, 230)", 
+                    color: "white", 
+                    border: "none", 
+                    padding: "5px 10px", 
+                    cursor: "pointer", 
+                    borderRadius: "5px"
+                  }}>
+                  🔄 Run
                 </button>
               </td>
             </tr>
@@ -139,14 +182,9 @@ const JenkinsTable = () => {
         </tbody>
       </table>
 
-      <div className="actions-container">
-        <button onClick={triggerAllBuilds} className="run-all-btn">
-          🚀 Run All
-        </button>
-
-        <button onClick={triggerFailedBuilds} className="run-failed-btn">
-          ❌ Run Failed Only
-        </button>
+      <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
+        <button onClick={triggerAllBuilds} style={{ backgroundColor: "green", color: "white", padding: "10px 15px", borderRadius: "5px" }}>🚀 Run All</button>
+        <button onClick={triggerFailedBuilds} style={{ backgroundColor: "red", color: "white", padding: "10px 15px", borderRadius: "5px" }}>❌ Run Failed Only</button>
       </div>
     </div>
   );

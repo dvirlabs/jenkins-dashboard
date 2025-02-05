@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { RefreshCcw } from "lucide-react"; // אייקון מקצועי
+import "../style/jenkinsTable.css";
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const buildsPath = process.env.REACT_APP_BUILDS_PATH;
@@ -7,15 +9,13 @@ const teamName = process.env.REACT_APP_TEAM_NAME;
 const JenkinsTable = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedResult, setSelectedResult] = useState("ALL");
-  const [priorityResult, setPriorityResult] = useState("NONE");
+  const [buildingJobs, setBuildingJobs] = useState(new Set());
 
   const fetchData = () => {
     fetch(`${apiUrl}/get_last_build_results_in_folder/${buildsPath}`)
       .then((response) => response.json())
       .then((data) => {
-        const dataArray = Object.entries(data);
-        setData(sortData(dataArray, selectedResult, priorityResult));
+        setData(Object.entries(data));
         setLoading(false);
       })
       .catch((error) => {
@@ -24,15 +24,51 @@ const JenkinsTable = () => {
       });
   };
 
-  const sortData = (dataArray, filterResult, priority) => {
-    let filteredData = filterResult === "ALL" ? dataArray : dataArray.filter(([_, value]) => value.result === filterResult);
+  const triggerBuild = (jobName) => {
+    setBuildingJobs((prev) => new Set(prev).add(jobName));
 
-    return filteredData.sort((a, b) => {
-      if (priority !== "NONE") {
-        if (a[1].result === priority && b[1].result !== priority) return -1;
-        if (b[1].result === priority && a[1].result !== priority) return 1;
+    fetch(`${apiUrl}/trigger_jenkins_build/${jobName}`, { method: "POST" })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          setTimeout(() => {
+            setBuildingJobs((prev) => {
+              const updatedJobs = new Set(prev);
+              updatedJobs.delete(jobName);
+              return updatedJobs;
+            });
+            fetchData();
+          }, 10000);
+        } else {
+          console.error("Failed to trigger job:", data.message);
+          alert(`Error triggering job ${jobName}: ${data.message}`);
+          setBuildingJobs((prev) => {
+            const updatedJobs = new Set(prev);
+            updatedJobs.delete(jobName);
+            return updatedJobs;
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error triggering build:", error);
+        alert(`Error triggering build for ${jobName}`);
+        setBuildingJobs((prev) => {
+          const updatedJobs = new Set(prev);
+          updatedJobs.delete(jobName);
+          return updatedJobs;
+        });
+      });
+  };
+
+  const triggerAllBuilds = () => {
+    data.forEach(([serviceName]) => triggerBuild(serviceName));
+  };
+
+  const triggerFailedBuilds = () => {
+    data.forEach(([serviceName, { result }]) => {
+      if (result !== "SUCCESS") {
+        triggerBuild(serviceName);
       }
-      return 0;
     });
   };
 
@@ -40,119 +76,78 @@ const JenkinsTable = () => {
     fetchData();
     const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
-  }, [selectedResult, priorityResult]);
+  }, []);
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div>
+    <div className="table-container">
       <h2>Jenkins Job Results of: {teamName}</h2>
-
-      {/* עיצוב שיפור רק עבור הפילטרים */}
-      <div style={{ display: "flex", gap: "15px", marginBottom: "10px", alignItems: "center" }}>
-        <div>
-          <label htmlFor="filter" style={{ fontWeight: "bold", marginRight: "5px" }}>Filter by Result:</label>
-          <select
-            id="filter"
-            value={selectedResult}
-            onChange={(e) => setSelectedResult(e.target.value)}
-            style={{
-              padding: "6px",
-              borderRadius: "5px",
-              border: "1px solid #aaa",
-              backgroundColor: "#f8f8f8",
-              cursor: "pointer"
-            }}
-          >
-            <option value="ALL">All</option>
-            <option value="FAILURE">Failure</option>
-            <option value="SUCCESS">Success</option>
-            <option value="UNSTABLE">Unstable</option>
-            <option value="ABORTED">Aborted</option>
-            <option value="NOT_BUILT">Not Built</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="priority" style={{ fontWeight: "bold", marginRight: "5px" }}>Priority Result:</label>
-          <select
-            id="priority"
-            value={priorityResult}
-            onChange={(e) => setPriorityResult(e.target.value)}
-            style={{
-              padding: "6px",
-              borderRadius: "5px",
-              border: "1px solid #aaa",
-              backgroundColor: "#f8f8f8",
-              cursor: "pointer"
-            }}
-          >
-            <option value="NONE">None</option>
-            <option value="FAILURE">Failure</option>
-            <option value="SUCCESS">Success</option>
-            <option value="UNSTABLE">Unstable</option>
-            <option value="ABORTED">Aborted</option>
-            <option value="NOT_BUILT">Not Built</option>
-          </select>
-        </div>
-      </div>
-
-      <table style={{ borderCollapse: "collapse", width: "100%" }}>
+      <table>
         <thead>
           <tr>
-            <th style={{ border: "1px solid black", padding: "8px" }}>Service Name</th>
-            <th style={{ border: "1px solid black", padding: "8px" }}>Result</th>
-            <th style={{ border: "1px solid black", padding: "8px" }}>Last Build Time</th>
-            <th style={{ border: "1px solid black", padding: "8px" }}>Link To Build</th>
+            <th>Service Name</th>
+            <th>Result</th>
+            <th>Last Build Time</th>
+            <th>Link To Build</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {data.map(([serviceName, { result, timestamp, build_url }], index) => (
             <tr key={index}>
-              <td style={{ border: "1px solid black", padding: "8px" }}>{serviceName}</td>
+              <td>
+                {serviceName}{" "}
+                {buildingJobs.has(serviceName) && <RefreshCcw className="spinner" size={20} />}
+              </td>
               <td
-                style={{
-                  border: "1px solid black",
-                  padding: "8px",
-                  color:
-                    result === "SUCCESS"
-                      ? "green"
-                      : result === "FAILURE"
-                      ? "red"
-                      : result === "ABORTED"
-                      ? "gray"
-                      : result === "UNSTABLE"
-                      ? "blue"
-                      : result === "NOT_BUILT"
-                      ? "orange"
-                      : "black",
-                }}
+                className={
+                  result === "SUCCESS"
+                    ? "status-success"
+                    : result === "FAILURE"
+                    ? "status-failure"
+                    : result === "ABORTED"
+                    ? "status-aborted"
+                    : result === "UNSTABLE"
+                    ? "status-unstable"
+                    : result === "NOT_BUILT"
+                    ? "status-not-built"
+                    : ""
+                }
               >
                 {result || "N/A"}
               </td>
-              <td style={{ border: "1px solid black", padding: "8px" }}>
-                {timestamp || "N/A"}
-              </td>
-              <td style={{ border: "1px solid black", padding: "8px" }}>
+              <td>{timestamp || "N/A"}</td>
+              <td>
                 {build_url ? (
-                  <a
-                    href={build_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: "none", color: "rgb(163, 148, 217)" }}
-                  >
+                  <a href={build_url} target="_blank" rel="noopener noreferrer">
                     View Build
                   </a>
                 ) : (
                   "N/A"
                 )}
               </td>
+              <td style={{ textAlign: "center" }}>
+                <button onClick={() => triggerBuild(serviceName)} className="run-btn">
+                  {buildingJobs.has(serviceName) ? <RefreshCcw className="spinner" size={20} /> : <RefreshCcw size={20} />}
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      <div className="actions-container">
+        <button onClick={triggerAllBuilds} className="run-all-btn">
+          🚀 Run All
+        </button>
+
+        <button onClick={triggerFailedBuilds} className="run-failed-btn">
+          ❌ Run Failed Only
+        </button>
+      </div>
     </div>
   );
 };

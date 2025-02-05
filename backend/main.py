@@ -18,9 +18,9 @@ app.add_middleware(
 def read_root():
     return {"Hello": "World"}
 
-@app.get("/get_jenkins_last_build/{job_name}")
-def get_last_build(job_name: str):
-    return get_jenkins_last_build(job_name)
+# @app.get("/get_jenkins_last_build/{job_name}")
+# def get_last_build(job_name: str):
+#     return get_jenkins_last_build(job_name)
 
 @app.get("/get_jenkins_last_build_result/{job_name}")
 def get_last_build_result(job_name: str):
@@ -29,6 +29,12 @@ def get_last_build_result(job_name: str):
 @app.get("/get_last_build_results_in_folder/{folder_name}")
 def get_last_build_results(folder_name: str):
     return get_last_build_results_in_folder(folder_name)
+
+@app.post("/trigger_jenkins_build/{job_name}")
+def trigger_build(job_name: str):
+    return trigger_jenkins_build(job_name)
+
+
 
 
 

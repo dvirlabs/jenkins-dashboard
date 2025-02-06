@@ -6,10 +6,11 @@
   .spinner {
     display: inline-block;
     animation: spin 1s linear infinite;
+    margin-left: 15px;
   }
   
   .table-container {
-    width: 90%;
+    width: 80%;
     overflow-x: auto;
   }
   
@@ -21,12 +22,8 @@
   th, td {
     border: 1px solid black;
     padding: 8px;
-    text-align: left;
+    text-align: center;
   }
-  
-  /* th {
-    background-color: #f2f2f2;
-  } */
   
   .status-success {
     color: green;
@@ -77,3 +74,6 @@
     gap: 10px;
   }
   
+  .custom-toast {
+    font-size: 22px;
+  }

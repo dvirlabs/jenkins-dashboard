@@ -1,4 +1,17 @@
 import React, { useState, useEffect } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import { SlRefresh } from "react-icons/sl";  // Import the SlRefresh icon
+import "react-toastify/dist/ReactToastify.css";
+import "../style/jenkinsTable.css";
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
+import { blue } from '@mui/material/colors';
+import * as colors from '@mui/material/colors';
+
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const buildsPath = process.env.REACT_APP_BUILDS_PATH;
@@ -9,7 +22,7 @@ const JenkinsTable = () => {
   const [loading, setLoading] = useState(true);
   const [buildingJobs, setBuildingJobs] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedResult, setSelectedResult] = useState(""); // ברירת מחדל: הצג הכל
+  const [selectedResult, setSelectedResult] = useState("");
 
   const fetchData = () => {
     fetch(`${apiUrl}/get_last_build_results_in_folder/${buildsPath}`)
@@ -31,12 +44,14 @@ const JenkinsTable = () => {
   }, []);
 
   const triggerBuild = (jobName) => {
+    toast.info(`🔄 Triggering build for ${jobName}...`);
     setBuildingJobs((prev) => new Set(prev).add(jobName));
 
     fetch(`${apiUrl}/trigger_jenkins_build/${jobName}`, { method: "POST" })
       .then((response) => response.json())
       .then((data) => {
         if (data.status === "success") {
+          toast.success(`✅ Build triggered successfully for ${jobName}!`);
           setTimeout(() => {
             setBuildingJobs((prev) => {
               const updatedJobs = new Set(prev);
@@ -46,7 +61,7 @@ const JenkinsTable = () => {
             fetchData();
           }, 10000);
         } else {
-          alert(`Error triggering job ${jobName}: ${data.message}`);
+          toast.error(`❌ Failed to trigger ${jobName}: ${data.message}`);
           setBuildingJobs((prev) => {
             const updatedJobs = new Set(prev);
             updatedJobs.delete(jobName);
@@ -55,7 +70,7 @@ const JenkinsTable = () => {
         }
       })
       .catch(() => {
-        alert(`Error triggering build for ${jobName}`);
+        toast.error(`❌ Error triggering build for ${jobName}`);
         setBuildingJobs((prev) => {
           const updatedJobs = new Set(prev);
           updatedJobs.delete(jobName);
@@ -66,12 +81,14 @@ const JenkinsTable = () => {
 
   const triggerAllBuilds = () => {
     if (window.confirm("Are you sure you want to run all builds?")) {
+      toast.info("🚀 Running all builds...");
       data.forEach(([serviceName]) => triggerBuild(serviceName));
     }
   };
 
   const triggerFailedBuilds = () => {
     if (window.confirm("Are you sure you want to run only the failed builds?")) {
+      toast.info("❌ Running failed builds...");
       data.forEach(([serviceName, { result }]) => {
         if (result !== "SUCCESS") {
           triggerBuild(serviceName);
@@ -80,7 +97,6 @@ const JenkinsTable = () => {
     }
   };
 
-  // 🔍 סינון השירותים לפי שם ותוצאה
   const filteredData = data.filter(([serviceName, { result }]) =>
     serviceName.toLowerCase().includes(searchTerm.toLowerCase()) &&
     (selectedResult === "" || result === selectedResult)
@@ -91,42 +107,77 @@ const JenkinsTable = () => {
   }
 
   return (
-    <div>
+    <div className="table-container">
       <h2>Jenkins Job Results of: {teamName}</h2>
+      <ToastContainer className={"custom-toast"} position="bottom-right" autoClose={3000} hideProgressBar={false} />
 
-      {/* 🔍 חיפוש + Dropdown לסינון */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}>
-        <input
-          type="text"
-          placeholder="🔍 Search services..."
+      {/* Search and Filter Controls */}
+      <Box display="flex" alignItems="center" mb={2}>
+        {/* Search Box */}
+        <TextField
+          label="Search Services"
+          variant="outlined"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            marginRight: "10px",
+          size="small"
+          sx={{
+            marginRight: 2,
+            '& .MuiInputBase-root': {
+              color: colors.blue[700],  // Blue text color
+            },
+            '& .MuiInputLabel-root': {
+              color: colors.blue[700],  // Blue label color
+            },
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                bordercolor: colors.blue[700],  // Blue border color
+              },
+              '&:hover fieldset': {
+                bordercolor: colors.blue[500],  // Darker blue border on hover
+              },
+              '&.Mui-focused fieldset': {
+                bordercolor: colors.blue[900],  // Darkest blue border on focus
+              },
+            },
           }}
         />
 
-        <select
-          value={selectedResult}
-          onChange={(e) => setSelectedResult(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-          }}
-        >
-          <option value="">All Results</option>
-          <option value="SUCCESS">✅ SUCCESS</option>
-          <option value="FAILURE">❌ FAILURE</option>
-          <option value="ABORTED">⚪ ABORTED</option>
-          <option value="UNSTABLE">🔵 UNSTABLE</option>
-          <option value="NOT_BUILT">🟠 NOT BUILT</option>
-        </select>
-      </div>
+        {/* Results Filter */}
+        <FormControl size="small">
+          <InputLabel sx={{ color: colors.blue[700] }}>Filter Results</InputLabel>
+          <Select
+            value={selectedResult}
+            onChange={(e) => setSelectedResult(e.target.value)}
+            label="Filter Results"
+            sx={{
+              minWidth: 150,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  bordercolor: colors.blue[700],  // Blue border color
+                },
+                '&:hover fieldset': {
+                  bordercolor: colors.blue[500],  // Darker blue border on hover
+                },
+                '&.Mui-focused fieldset': {
+                  bordercolor: colors.blue[900],  // Darkest blue border on focus
+                },
+              },
+              '& .MuiInputBase-root': {
+                color: colors.blue[700],  // Blue text color
+              },
+            }}
+          >
+            <MenuItem value="">All Results</MenuItem>
+            <MenuItem value="SUCCESS">✅ SUCCESS</MenuItem>
+            <MenuItem value="FAILURE">❌ FAILURE</MenuItem>
+            <MenuItem value="ABORTED">⚪ ABORTED</MenuItem>
+            <MenuItem value="UNSTABLE">🔵 UNSTABLE</MenuItem>
+            <MenuItem value="NOT_BUILT">🟠 NOT BUILT</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
 
+      {/* Table */}
       <table style={{ borderCollapse: "collapse", width: "100%" }}>
         <thead>
           <tr>
@@ -134,47 +185,77 @@ const JenkinsTable = () => {
             <th style={{ border: "1px solid black", padding: "8px" }}>Result</th>
             <th style={{ border: "1px solid black", padding: "8px" }}>Last Build Time</th>
             <th style={{ border: "1px solid black", padding: "8px" }}>Link To Build</th>
-            <th style={{ border: "1px solid black", padding: "8px" }}>Actions</th>
+            <th style={{ border: "1px solid black", padding: "8px" }}>Rebuild</th>
           </tr>
         </thead>
         <tbody>
           {filteredData.map(([serviceName, { result, timestamp, build_url }], index) => (
             <tr key={index}>
               <td style={{ border: "1px solid black", padding: "8px" }}>
-                {serviceName} {buildingJobs.has(serviceName) && "🔄"}
+                {serviceName}
+                {buildingJobs.has(serviceName) && (
+                  <SlRefresh className="spinner" />
+                )}
               </td>
-              <td style={{
-                border: "1px solid black",
-                padding: "8px",
-                color:
-                  result === "SUCCESS" ? "green" :
-                  result === "FAILURE" ? "red" :
-                  result === "ABORTED" ? "gray" :
-                  result === "UNSTABLE" ? "blue" :
-                  result === "NOT_BUILT" ? "orange" : "black",
-              }}>
+
+              <td
+                style={{
+                  border: "1px solid black",
+                  padding: "8px",
+                  color:
+                    result === "SUCCESS"
+                      ? "green"
+                      : result === "FAILURE"
+                      ? "red"
+                      : result === "ABORTED"
+                      ? "gray"
+                      : result === "UNSTABLE"
+                      ? "blue"
+                      : result === "NOT_BUILT"
+                      ? "orange"
+                      : "black",
+                }}
+              >
                 {result || "N/A"}
               </td>
-              <td style={{ border: "1px solid black", padding: "8px" }}>{timestamp || "N/A"}</td>
+              <td style={{ border: "1px solid black", padding: "8px" }}>
+                {timestamp || "N/A"}
+              </td>
               <td style={{ border: "1px solid black", padding: "8px" }}>
                 {build_url ? (
-                  <a href={build_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "rgb(163, 148, 217)" }}>
+                  <a
+                    href={build_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      textDecoration: "none",
+                      color: "rgb(163, 148, 217)",
+                    }}
+                  >
                     View Build
                   </a>
-                ) : "N/A"}
+                ) : (
+                  "N/A"
+                )}
               </td>
-              <td style={{ border: "1px solid black", padding: "8px", textAlign: "center" }}>
-                <button 
-                  onClick={() => triggerBuild(serviceName)} 
+              <td
+                style={{
+                  border: "1px solid black",
+                  padding: "8px",
+                  textAlign: "center",
+                }}
+              >
+                <button
+                  onClick={() => triggerBuild(serviceName)}
                   style={{
-                    backgroundColor: "rgb(98, 158, 230)", 
-                    color: "white", 
-                    border: "none", 
-                    padding: "5px 10px", 
-                    cursor: "pointer", 
-                    borderRadius: "5px"
-                  }}>
-                  🔄 Run
+                    backgroundColor: "rgb(18, 94, 187)",
+                    color: "white",
+                    padding: "5px 10px",
+                    borderRadius: "5px",
+                    fontSize: "17px",
+                  }}
+                >
+                  <SlRefresh /> Run
                 </button>
               </td>
             </tr>
@@ -182,9 +263,30 @@ const JenkinsTable = () => {
         </tbody>
       </table>
 
+      {/* Action Buttons */}
       <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
-        <button onClick={triggerAllBuilds} style={{ backgroundColor: "green", color: "white", padding: "10px 15px", borderRadius: "5px" }}>🚀 Run All</button>
-        <button onClick={triggerFailedBuilds} style={{ backgroundColor: "red", color: "white", padding: "10px 15px", borderRadius: "5px" }}>❌ Run Failed Only</button>
+        <button
+          onClick={triggerAllBuilds}
+          style={{
+            backgroundColor: "green",
+            color: "white",
+            padding: "10px 15px",
+            borderRadius: "5px",
+          }}
+        >
+          🚀 Run All
+        </button>
+        <button
+          onClick={triggerFailedBuilds}
+          style={{
+            backgroundColor: "red",
+            color: "white",
+            padding: "10px 15px",
+            borderRadius: "5px",
+          }}
+        >
+          ❌ Run Failed Only
+        </button>
       </div>
     </div>
   );

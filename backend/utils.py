@@ -105,7 +105,8 @@ def trigger_jenkins_build(folder_name, job_name, main_branch):
             "status": "error",
             "message": f"Failed to trigger job {job_name} in {folder_name}",
             "status_code": response.status_code,
-            "response_text": response.text
+            "response_text": response.text,
+            "URL": url,
         }
 
 

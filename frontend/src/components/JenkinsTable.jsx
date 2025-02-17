@@ -110,7 +110,7 @@ const JenkinsTable = () => {
           visible={true}
           height="100"
           width="100"
-          color="#472bcf"
+          color="#2434ce"
           ariaLabel="three-circles-loading"
         />
       </div>

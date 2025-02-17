@@ -17,13 +17,14 @@ main_branch = os.getenv("MAIN_BRANCH")
 # פונקציה לשליפת נתוני ה-build האחרון
 def get_jenkins_last_build_result(job_path):
     """
-    מקבלת שם Job ובודקת את הסטטוס של ה-main_branch
+    מקבלת שם Job ובודקת את הסטטוס של ה-main_branch.
+    מחזירה את הסטטוס, את הזמן האחרון בפורמט קריא ואת ה-URL של ה-build האחרון.
     """
     job_url = f"{jenkins_url}/job/{job_path}/job/{main_branch}/lastBuild/api/json"
     
     # הדפסת ה-URL בפועל
     logging.debug(f"Fetching job URL: {job_url}")
-    print(f"Fetching job URL: {job_url}")  # אפשר להחליף ל-logging.debug
+    print(f"Fetching job URL: {job_url}")  # ניתן להחליף ל-logging.debug
 
     response = requests.get(job_url, auth=(jenkins_username, api_token))
 
@@ -32,9 +33,14 @@ def get_jenkins_last_build_result(job_path):
         return {"error": f"Failed to fetch job {job_path}, status code {response.status_code}"}
 
     build_data = response.json()
+    timestamp = build_data.get("timestamp")
+
+    # ממיר את ה-timestamp לפורמט קריא אם קיים
+    human_readable_timestamp = datetime.fromtimestamp(timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S') if timestamp else "UNKNOWN"
+
     return {
         "result": build_data.get("result", "UNKNOWN"),
-        "timestamp": build_data.get("timestamp"),
+        "timestamp": human_readable_timestamp,  # מחזיר את הזמן בפורמט קריא
         "build_url": build_data.get("url"),
     }
 
@@ -70,8 +76,8 @@ def get_last_build_results_in_folder(folder_name):
 # פונקציה להפעלת Job ב-Jenkins
 def trigger_jenkins_build(job_name):
     # מוודא שהנתיב כולל את `my-apps`
-    if not job_name.startswith("{folder_name}/"):
-        job_name = f"{folder_name}/{job_name}"
+    if not job_name.startswith("{my-apps}/"):
+        job_name = f"my-apps/{job_name}"
 
     job_path = "/job/".join(job_name.split("/"))  
     url = f"{jenkins_url}/job/{job_path}/build"

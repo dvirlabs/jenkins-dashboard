@@ -15,6 +15,7 @@ import * as colors from '@mui/material/colors';
 const apiUrl = process.env.REACT_APP_API_URL;
 const buildsPath = process.env.REACT_APP_BUILDS_PATH;
 const teamName = process.env.REACT_APP_TEAM_NAME;
+const mainBranch = process.env.REACT_APP_MAIN_BRANCH;
 
 const JenkinsTable = () => {
   const [data, setData] = useState([]);
@@ -46,7 +47,7 @@ const JenkinsTable = () => {
     toast.info(`🔄 Triggering build for ${jobName}...`);
     setBuildingJobs((prev) => new Set(prev).add(jobName));
 
-    fetch(`${apiUrl}/trigger_jenkins_build/${jobName}`, { method: "POST" })
+    fetch(`${apiUrl}/trigger_jenkins_build/${buildsPath}/${jobName}/${mainBranch}`, { method: "POST" })
       .then((response) => response.json())
       .then((data) => {
         if (data.status === "success") {

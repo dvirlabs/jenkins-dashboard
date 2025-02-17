@@ -9,6 +9,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
+import { ThreeCircles } from 'react-loader-spinner';
 import * as colors from '@mui/material/colors';
 
 
@@ -103,7 +104,17 @@ const JenkinsTable = () => {
   );
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-16">
+        <ThreeCircles
+          visible={true}
+          height="100"
+          width="100"
+          color="#472bcf"
+          ariaLabel="three-circles-loading"
+        />
+      </div>
+    );
   }
 
   return (

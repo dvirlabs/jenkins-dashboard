@@ -74,19 +74,17 @@ def get_last_build_results_in_folder(folder_name):
     return results
 
 # פונקציה להפעלת Job ב-Jenkins
-def trigger_jenkins_build(job_name):
-    # מוודא שהנתיב כולל את `my-apps`
-    if not job_name.startswith("{my-apps}/"):
-        job_name = f"my-apps/{job_name}"
-
-    job_path = "/job/".join(job_name.split("/"))  
+def trigger_jenkins_build(folder_name, job_name):
+    """
+    מפעיל Job ב-Jenkins בתוך התיקייה שנשלחה בבקשה.
+    """
+    job_path = f"{folder_name}/job/{job_name}"
     url = f"{jenkins_url}/job/{job_path}/build"
 
-    logging.info(f"Job name received: {job_name}")
-    logging.info(f"Formatted job path: {job_path}")
+    logging.info(f"Triggering job: {job_name} in folder: {folder_name}")
     logging.info(f"Final request URL: {url}")
 
-    # אם ה-Jenkins דורש CSRF Protection, מביאים את ה-crumb
+    # מביא את ה-CSRF Crumb אם נדרש
     crumb_url = f"{jenkins_url}/crumbIssuer/api/json"
     crumb_response = requests.get(crumb_url, auth=(jenkins_username, api_token))
 
@@ -101,12 +99,13 @@ def trigger_jenkins_build(job_name):
     logging.info(f"Response text: {response.text}")
 
     if response.status_code in [200, 201]:
-        return {"status": "success", "message": f"Job {job_name} triggered successfully"}
+        return {"status": "success", "message": f"Job {job_name} triggered successfully in {folder_name}"}
     else:
         return {
             "status": "error",
-            "message": f"Failed to trigger job {job_name}",
+            "message": f"Failed to trigger job {job_name} in {folder_name}",
             "status_code": response.status_code,
             "response_text": response.text
         }
+
 

@@ -46,7 +46,7 @@ const JenkinsTable = () => {
     toast.info(`🔄 Triggering build for ${jobName}...`);
     setBuildingJobs((prev) => new Set(prev).add(jobName));
 
-    fetch(`${apiUrl}/trigger_jenkins_build/${jobName}`, { method: "POST" })
+    fetch(`${apiUrl}/trigger_jenkins_build/${buildsPath}/${jobName}`, { method: "POST" })
       .then((response) => response.json())
       .then((data) => {
         if (data.status === "success") {

@@ -74,12 +74,12 @@ def get_last_build_results_in_folder(folder_name):
     return results
 
 # פונקציה להפעלת Job ב-Jenkins
-def trigger_jenkins_build(folder_name, job_name):
+def trigger_jenkins_build(folder_name, job_name, main_branch):
     """
     מפעיל Job ב-Jenkins בתוך התיקייה שנשלחה בבקשה.
     """
     job_path = f"{folder_name}/job/{job_name}"
-    url = f"{jenkins_url}/job/{job_path}/build"
+    url = f"{jenkins_url}/job/{job_path}/job/{main_branch}/build"
 
     logging.info(f"Triggering job: {job_name} in folder: {folder_name}")
     logging.info(f"Final request URL: {url}")

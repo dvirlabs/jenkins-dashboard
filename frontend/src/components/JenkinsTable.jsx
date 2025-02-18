@@ -119,7 +119,7 @@ const JenkinsTable = () => {
 
   return (
     <div className="table-container">
-      <h2>Jenkins Job Results of: {teamName}</h2>
+      <h2 className="title">Jenkins Job Results of: {teamName}</h2>
       <ToastContainer className={"custom-toast"} position="bottom-right" autoClose={3000} hideProgressBar={false} />
 
       {/* Search and Filter Controls */}

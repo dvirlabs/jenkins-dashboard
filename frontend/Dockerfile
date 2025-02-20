@@ -1,30 +1,39 @@
+# First stage: Build React app
 FROM node:20.11.1 AS build
 
 WORKDIR /app
 
-COPY package.json ./ 
-COPY package-lock.json ./ 
-
+# Copy package files and install dependencies
+COPY package.json package-lock.json ./
 RUN npm install --legacy-peer-deps
 
+# Copy the entire app and build
 COPY . .
-
 RUN npm run build
 
-# Second stage: nginx image
+# Second stage: Use Nginx for serving the built app
 FROM nginx:1.26.2
 
-# Install ping tool in the nginx container
-# RUN apt-get update && apt-get install -y iputils-ping
+# Set working directory inside Nginx container
+WORKDIR /usr/share/nginx/html
 
-# Copy the built frontend app into the nginx container
+# Copy built React app from the build stage
 COPY --from=build /app/build /usr/share/nginx/html
-RUN chmod -R 777 /usr/share/nginx/
 
+# Copy entrypoint script and set correct permissions
+COPY docker-entrypoint.sh .
+RUN chmod +x docker-entrypoint.sh
 
-# Expose port 3000 (for development purposes)
-EXPOSE 3000
+# Copy env template (without overwriting it later)
+COPY env.js.template /usr/share/nginx/html/env.js
 
-# Start nginx
+RUN ls -al
+
+# Set entrypoint script
+# ENTRYPOINT ["/usr/share/nginx/html/docker-entrypoint.sh"]
+
+# Expose port 80 (Nginx default)
+EXPOSE 80
+
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
-

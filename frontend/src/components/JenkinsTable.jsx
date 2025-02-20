@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
-import { SlRefresh } from "react-icons/sl";  // Import the SlRefresh icon
+import { SlRefresh } from "react-icons/sl";
+import config from "../config";
 import "react-toastify/dist/ReactToastify.css";
 import "../style/jenkinsTable.css";
 import Box from '@mui/material/Box';
@@ -13,10 +14,20 @@ import { ThreeCircles } from 'react-loader-spinner';
 import * as colors from '@mui/material/colors';
 
 
-const apiUrl = process.env.REACT_APP_API_URL;
-const buildsPath = process.env.REACT_APP_BUILDS_PATH;
-const teamName = process.env.REACT_APP_TEAM_NAME;
-const mainBranch = process.env.REACT_APP_MAIN_BRANCH;
+// const apiUrl = process.env.REACT_APP_API_URL;
+// const buildsPath = process.env.REACT_APP_BUILDS_PATH;
+// const teamName = process.env.REACT_APP_TEAM_NAME;
+// const mainBranch = process.env.REACT_APP_MAIN_BRANCH;
+
+const apiUrl = config.apiUrl;
+const buildsPath = config.buildsPath;
+const teamName = config.teamName;
+const mainBranch = config.mainBranch;
+
+// const apiUrl = window.REACT_APP_API_URL;
+// const buildsPath = window.REACT_APP_BUILDS_PATH;
+// const teamName = window.REACT_APP_TEAM_NAME;
+// const mainBranch = window.REACT_APP_MAIN_BRANCH;
 
 const JenkinsTable = () => {
   const [data, setData] = useState([]);

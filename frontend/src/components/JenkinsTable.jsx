@@ -13,10 +13,15 @@ import { ThreeCircles } from 'react-loader-spinner';
 import * as colors from '@mui/material/colors';
 
 
-const apiUrl = process.env.REACT_APP_API_URL;
-const buildsPath = process.env.REACT_APP_BUILDS_PATH;
-const teamName = process.env.REACT_APP_TEAM_NAME;
-const mainBranch = process.env.REACT_APP_MAIN_BRANCH;
+// const apiUrl = process.env.REACT_APP_API_URL;
+// const buildsPath = process.env.REACT_APP_BUILDS_PATH;
+// const teamName = process.env.REACT_APP_TEAM_NAME;
+// const mainBranch = process.env.REACT_APP_MAIN_BRANCH;
+
+const apiUrl = window._env_?.REACT_APP_API_URL
+const buildsPath = window._env_?.REACT_APP_BUILDS_PATH
+const teamName = window._env_?.REACT_APP_TEAM_NAME
+const mainBranch = window._env_?.REACT_APP_MAIN_BRANCH
 
 const JenkinsTable = () => {
   const [data, setData] = useState([]);

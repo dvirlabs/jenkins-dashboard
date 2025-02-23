@@ -22,6 +22,7 @@ COPY --from=build /app/build /usr/share/nginx/html
 RUN chmod -R 777 /usr/share/nginx/
 
 COPY docker-entrypoint.sh .
+RUN chmod +x docker-entrypoint.sh
 
 ENTRYPOINT [ "./docker-entrypoint.sh" ]
 

@@ -21,6 +21,9 @@ FROM nginx:1.26.2
 COPY --from=build /app/build /usr/share/nginx/html
 RUN chmod -R 777 /usr/share/nginx/
 
+COPY docker-entrypoint.sh .
+
+ENTRYPOINT [ "./docker-entrypoint.sh" ]
 
 # Expose port 3000 (for development purposes)
 EXPOSE 3000

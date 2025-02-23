@@ -1,36 +1,32 @@
+# שלב ראשון: בניית ה-React
 FROM node:20.11.1 AS build
 
 WORKDIR /app
 
-COPY package.json ./ 
-COPY package-lock.json ./ 
-
+COPY package.json package-lock.json ./
 RUN npm install --legacy-peer-deps
 
 COPY . .
-
 RUN npm run build
 
-# Second stage: nginx image
+# שלב שני: Nginx
 FROM nginx:1.26.2
 
-# Install ping tool in the nginx container
-# RUN apt-get update && apt-get install -y iputils-ping
-
-# Copy the built frontend app into the nginx container
+# העתקת האפליקציה המובנית
 COPY --from=build /app/build /usr/share/nginx/html
 RUN chmod -R 777 /usr/share/nginx/
 
-COPY env.js /usr/share/nginx/html/env.js
+# העתקת קובץ תבנית ה-env
+COPY env.js.template /usr/share/nginx/html/env.js.template
 
-COPY docker-entrypoint.sh .
-RUN chmod +x docker-entrypoint.sh
+# העתקת קובץ ה-entrypoint
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
-ENTRYPOINT [ "./docker-entrypoint.sh" ]
+ENTRYPOINT [ "/docker-entrypoint.sh" ]
 
-# Expose port 3000 (for development purposes)
+# חשיפת הפורט
 EXPOSE 3000
 
-# Start nginx
+# הפעלת Nginx
 CMD ["nginx", "-g", "daemon off;"]
-

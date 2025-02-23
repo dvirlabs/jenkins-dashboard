@@ -18,10 +18,10 @@ import * as colors from '@mui/material/colors';
 // const teamName = process.env.REACT_APP_TEAM_NAME;
 // const mainBranch = process.env.REACT_APP_MAIN_BRANCH;
 
-const apiUrl = window._env_?.REACT_APP_API_URL
-const buildsPath = window._env_?.REACT_APP_BUILDS_PATH
-const teamName = window._env_?.REACT_APP_TEAM_NAME
-const mainBranch = window._env_?.REACT_APP_MAIN_BRANCH
+const apiUrl = window.REACT_APP_API_URL;
+const buildsPath = window.REACT_APP_BUILDS_PATH;
+const teamName = window.REACT_APP_TEAM_NAME;
+const mainBranch = window.REACT_APP_MAIN_BRANCH;
 
 const JenkinsTable = () => {
   const [data, setData] = useState([]);
